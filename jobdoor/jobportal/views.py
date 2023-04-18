@@ -57,8 +57,8 @@ class CompanyLoginAPIView(generics.GenericAPIView):
         user = authenticate(request, username=username, password=password)
         if user:
             if user.is_active and user.is_company:
-              login(request, user)
-              token, created = Token.objects.get_or_create(user=user)
+                login(request, user)
+                token, created = Token.objects.get_or_create(user=user)
             return Response({'Login Successfully' + ' ' + 'token': token.key}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'}, status=401)
@@ -100,7 +100,8 @@ class JobList(generics.ListAPIView):
         if user.is_authenticated and user.is_company:
             return Job.objects.filter(company=user.company, status=True)
         else:
-            raise PermissionDenied(detail='Only company users can see their job list')
+            raise PermissionDenied(
+                detail='Only company users can see their job list')
 
 
 @method_decorator(login_required, name='dispatch')
@@ -127,13 +128,15 @@ class ApplicationList(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated or not user.is_company:
-            raise PermissionDenied(detail='Only company users can see their applications list')
+            raise PermissionDenied(
+                detail='Only company users can see their applications list')
         company = user.company
         applications = Application.objects.filter(job__company=company)
         if applications.exists():
             return applications
         else:
-            raise PermissionDenied(detail='No applications found for this company')
+            raise PermissionDenied(
+                detail='No applications found for this company')
 
 
 class ApplicationDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -144,7 +147,8 @@ class ApplicationDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated and not user.is_company:
-            raise PermissionDenied(detail='Only company users can see their applications details')
+            raise PermissionDenied(
+                detail='Only company users can see their applications details')
 
 
 @method_decorator(login_required, name='dispatch')
@@ -174,7 +178,8 @@ class ApplyJobView(generics.CreateAPIView):
             except Application.DoesNotExist:
                 pass
 
-            serializer.save(job=job, user=user, apply_date=date_today, status=False)
+            serializer.save(job=job, user=user,
+                            apply_date=date_today, status=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -186,11 +191,13 @@ class ReviewCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         company_id = self.kwargs.get('company_id')
-        company_user = get_object_or_404(User.objects.filter(is_company=True), pk=company_id)
+        company_user = get_object_or_404(
+            User.objects.filter(is_company=True), pk=company_id)
         company = company_user.company
         user = self.request.user
         if not user.is_user:
-            raise PermissionDenied(detail='Only Applicant users can submit reviews.')
+            raise PermissionDenied(
+                detail='Only Applicant users can submit reviews.')
         existing_review = Review.objects.filter(company=company, user=user)
         if existing_review.exists():
             raise ValidationError('You have already reviewed this company.')
@@ -202,7 +209,8 @@ class ReviewListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         company_id = self.kwargs.get('company_id')
-        company_user = get_object_or_404(User.objects.filter(is_company=True), pk=company_id)
+        company_user = get_object_or_404(
+            User.objects.filter(is_company=True), pk=company_id)
         company = company_user.company
         return Review.objects.filter(company=company)
 
@@ -226,11 +234,13 @@ class AddSalaryCreateAPI(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         company_id = self.kwargs.get('company_id')
-        company_user = get_object_or_404(User.objects.filter(is_company=True), pk=company_id)
+        company_user = get_object_or_404(
+            User.objects.filter(is_company=True), pk=company_id)
         company = company_user.company
         user = self.request.user
         if not user.is_user:
-            raise PermissionDenied(detail='Only Applicant users can submit Salary reviews.')
+            raise PermissionDenied(
+                detail='Only Applicant users can submit Salary reviews.')
         existing_review = Salary.objects.filter(company=company, user=user)
         if existing_review.exists():
             raise ValidationError('You have already reviewed this company.')
@@ -242,7 +252,8 @@ class SalaryListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         company_id = self.kwargs.get('company_id')
-        company_user = get_object_or_404(User.objects.filter(is_company=True), pk=company_id)
+        company_user = get_object_or_404(
+            User.objects.filter(is_company=True), pk=company_id)
         company = company_user.company
         return Salary.objects.filter(company=company)
 
@@ -254,7 +265,8 @@ class CompanySalaryListAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if not user.is_company:
-            raise PermissionDenied(detail='Only Company can check Salary review.')
+            raise PermissionDenied(
+                detail='Only Company can check Salary review.')
         company = self.request.user.company
         return company.Salary.all()
 
@@ -266,12 +278,15 @@ class AddInterviewCreateAPI(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         company_id = self.kwargs.get('company_id')
-        company_user = get_object_or_404(User.objects.filter(is_company=True), pk=company_id)
+        company_user = get_object_or_404(
+            User.objects.filter(is_company=True), pk=company_id)
         company = company_user.company
         user = self.request.user
         if not user.is_user:
-            raise PermissionDenied(detail='Only Applicant users can submit Interview reviews.')
-        existing_review = AddInterview.objects.filter(company=company, user=user)
+            raise PermissionDenied(
+                detail='Only Applicant users can submit Interview reviews.')
+        existing_review = AddInterview.objects.filter(
+            company=company, user=user)
         if existing_review.exists():
             raise ValidationError('You have already reviewed this company.')
         serializer.save(company=company, user=user)
@@ -282,7 +297,8 @@ class InterviewListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         company_id = self.kwargs.get('company_id')
-        company_user = get_object_or_404(User.objects.filter(is_company=True), pk=company_id)
+        company_user = get_object_or_404(
+            User.objects.filter(is_company=True), pk=company_id)
         company = company_user.company
         return AddInterview.objects.filter(company=company)
 
@@ -294,7 +310,8 @@ class CompanyInterviewListAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if not user.is_company:
-            raise PermissionDenied(detail='Only Company can check Interview review.')
+            raise PermissionDenied(
+                detail='Only Company can check Interview review.')
         company = self.request.user.company
         interviews = company.Interview.all()
         if not interviews.exists():
