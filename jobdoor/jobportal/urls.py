@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
-from .views import *
+from .views import UserLoginAPIView, UserRegistrationView, ApplicantUserList, ApplicantUserDetail, JobList, JobDetail, ApplyJobView, CompanySignupView, CompanyLoginAPIView, CompanyList, CompanySearchAPIView, CompanyDetail, JobCreation, ApplicationList, ApplicationDetail, ReviewCreateAPIView, ReviewListAPIView, CompanyReviewListAPIView, AddSalaryCreateAPI, SalaryListAPIView, CompanySalaryListAPIView, AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView
 
 
 urlpatterns = [
