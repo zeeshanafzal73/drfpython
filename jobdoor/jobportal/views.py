@@ -184,6 +184,21 @@ class ApplyJobView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AppliedJobList(generics.ListAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        applications = Application.objects.filter(user=user)
+        if applications.exists():
+            return applications
+        else:
+            raise PermissionDenied(
+                detail='No applied jobs found for this user')
+
+
+
 class ReviewCreateAPIView(generics.CreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
