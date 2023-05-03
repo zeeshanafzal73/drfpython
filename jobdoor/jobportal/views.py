@@ -75,6 +75,13 @@ class CompanySearchAPIView(generics.ListAPIView):
     filterset_fields = ['company_name', 'location']
     search_fields = ['company_name', 'location']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response({'detail': 'No company found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class CompanyList(generics.ListAPIView):
     serializer_class = CompanyUserSerializer
@@ -196,7 +203,6 @@ class AppliedJobList(generics.ListAPIView):
         else:
             raise PermissionDenied(
                 detail='No applied jobs found for this user')
-
 
 
 class ReviewCreateAPIView(generics.CreateAPIView):
