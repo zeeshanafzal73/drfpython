@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
-from .views import UserLoginAPIView, UserRegistrationView, ApplicantUserList, ApplicantUserDetail, JobList, JobDetail, ApplyJobView, AppliedJobList, CompanySignupView, CompanyLoginAPIView, CompanyList, CompanySearchAPIView, CompanyDetail, JobCreation, ApplicationList, ApplicationDetail, ReviewCreateAPIView, ReviewListAPIView, CompanyReviewListAPIView, AddSalaryCreateAPI, SalaryListAPIView, CompanySalaryListAPIView, AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView
+from .views import UserLoginAPIView, UserRegistrationView, ApplicantUserList, ApplicantUserDetail, JobList, JobDetail, JobSearchAPIView, ApplyJobView, AppliedJobList, CompanySignupView, CompanyLoginAPIView, CompanyList, CompanySearchAPIView, CompanyDetail, JobCreation, ApplicationList, ApplicationDetail, ReviewCreateAPIView, ReviewListAPIView, CompanyReviewListAPIView, AddSalaryCreateAPI, SalaryListAPIView, CompanySalaryListAPIView, AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView
 
 
 urlpatterns = [
@@ -13,6 +13,7 @@ urlpatterns = [
     path('jobs/', JobList.as_view(), name='job-list'),
     path('jobs/<int:pk>/', JobDetail.as_view(), name='job-detail'),
     path('jobs/<int:job_id>/apply/', ApplyJobView.as_view(), name='apply_job'),
+    path('search/jobs/', JobSearchAPIView.as_view(), name='search-jobs'),
     path('applied-jobs/', AppliedJobList.as_view(), name='applied_job_list'),
 
 

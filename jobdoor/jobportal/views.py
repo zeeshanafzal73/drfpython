@@ -128,6 +128,21 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JobSerializer
 
 
+class JobSearchAPIView(generics.ListAPIView):
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['title', 'company', 'location']
+    search_fields = ['title', 'company', 'location', 'description']
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response({'detail': 'No jobs found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
 class ApplicationList(generics.ListAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = (IsAuthenticated,)

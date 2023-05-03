@@ -120,12 +120,12 @@ class CompanyUserSerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(source='company.logo')
     location = serializers.CharField(source='company.location')
     company_name = serializers.CharField(source='company.company_name')
-    status = serializers.CharField(source='company.status')
-    type = serializers.CharField(source='company.type')
+    # status = serializers.CharField(source='company.status')
+    # type = serializers.CharField(source='company.type')
 
     class Meta:
         model = User
-        fields =['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name', 'status', 'type']
+        fields =['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name']
 
 
 class CompanySerializer(serializers.ModelSerializer):
