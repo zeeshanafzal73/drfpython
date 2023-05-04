@@ -115,17 +115,6 @@ class CompanyLoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 
-# class CompanyUserSerializer(serializers.ModelSerializer):
-#     phone = serializers.CharField(source='company.phone')
-#     logo = serializers.ImageField(source='company.logo')
-#     location = serializers.CharField(source='company.location')
-#     company_name = serializers.CharField(source='company.company_name')
-#     # status = serializers.CharField(source='company.status')
-#     # type = serializers.CharField(source='company.type')
-#
-#     class Meta:
-#         model = User
-#         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name']
 class CompanyUserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source='company.phone')
     logo = serializers.ImageField(source='company.logo')
@@ -159,18 +148,6 @@ class CompanySerializer(serializers.ModelSerializer):
         model = Company
         fields = ['company_id', 'company_username', 'company_name', 'logo']
 
-    # def update(self, instance, validated_data):
-    #     company_data = validated_data.pop('company', None)
-    #     for attr, value in validated_data.items():
-    #         setattr(instance, attr, value)
-    #     if company_data is not None:
-    #         company = instance.company
-    #         for attr, value in company_data.items():
-    #             setattr(company, attr, value)
-    #         company.save()
-    #     instance.save()
-    #     return instance
-    #
 
 class JobSerializer(serializers.ModelSerializer):
     # company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all())
