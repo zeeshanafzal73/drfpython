@@ -65,7 +65,8 @@ class ApplicantUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'gender', 'type']
+        fields = ['id', 'username', 'email', 'first_name',
+                  'last_name', 'phone', 'gender', 'type']
 
 
 class CompanyRegistrationSerializer(RegisterSerializer):
@@ -123,7 +124,8 @@ class CompanyUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name']
+        fields = ['id', 'username', 'email', 'first_name',
+                  'last_name', 'phone', 'logo', 'location', 'company_name']
 
     def update(self, instance, validated_data):
         company_data = validated_data.pop('company', None)
@@ -136,6 +138,7 @@ class CompanyUserSerializer(serializers.ModelSerializer):
             company.save()
         instance.save()
         return instance
+
 
 class CompanySerializer(serializers.ModelSerializer):
     company_id = serializers.CharField(source='company.id')
@@ -151,11 +154,13 @@ class CompanySerializer(serializers.ModelSerializer):
 
 class JobSerializer(serializers.ModelSerializer):
     # company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all())
-    company_name = serializers.CharField(source='company.company_name', read_only=True)
+    company_name = serializers.CharField(
+        source='company.company_name', read_only=True)
 
     class Meta:
         model = Job
-        fields = ['id', 'company_name', 'start_date', 'end_date', 'title', 'salary', 'image', 'description', 'experience', 'location', 'skills', 'creation_date']
+        fields = ['id', 'company_name', 'start_date', 'end_date', 'title', 'salary',
+                  'image', 'description', 'experience', 'location', 'skills', 'creation_date']
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
@@ -168,7 +173,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'rating',  'job_type', 'Employment_Date', 'job_title', 'user',  'comments', 'pros', 'cons', 'Advice_to_management', 'date_created')
+        fields = ('id', 'rating',  'job_type', 'Employment_Date', 'job_title', 'user',
+                  'comments', 'pros', 'cons', 'Advice_to_management', 'date_created')
         read_only_fields = ('user', 'date_created')
 
 
@@ -198,4 +204,5 @@ class InterviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AddInterview
-        fields = ['id', 'Rate', 'job_title', 'process', 'questions', 'answers', 'outcome_offer', 'user']
+        fields = ['id', 'Rate', 'job_title', 'process',
+                  'questions', 'answers', 'outcome_offer', 'user']
