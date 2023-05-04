@@ -1,22 +1,92 @@
 from datetime import date
+from allauth.account.views import logout
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_auth.registration.views import RegisterView
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework.generics import get_object_or_404, CreateAPIView
-from .models import ApplicantUser, Company, Job, Application, Review, Salary, AddInterview
-from .serializers import ApplicantUserSerializer, UserLoginSerializer, CompanySerializer, CompanyRegistrationSerializer, CompanyUserSerializer, JobSerializer, ApplicationSerializer, ApplicantUserSignupSerializer, CompanyLoginSerializer, ReviewSerializer, CompanyReviewSerializer, SalarySerializer, InterviewSerializer
+from rest_framework.generics import get_object_or_404, RetrieveAPIView
+from rest_framework.views import APIView
+from .models import Company, Job, Application, Review, Salary, AddInterview
+from .serializers import ApplicantUserSerializer, UserLoginSerializer, CompanySerializer, CompanyRegistrationSerializer, CompanyUserSerializer, JobSerializer, ApplicationSerializer, ApplicantUserSignupSerializer, CompanyLoginSerializer, ReviewSerializer, SalarySerializer, InterviewSerializer
 from rest_framework import generics, status, permissions, filters
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 
 
 User = get_user_model()
+
+
+class UserProfileView(RetrieveAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    authentication_class = [TokenAuthentication]
+
+    def get(self, request):
+        try:
+            if request.user.is_user:
+                user_profile = request.user.applicantuser
+                status_code = status.HTTP_200_OK
+                response = {
+                    'success': 'true',
+                    'status code': status_code,
+                    'message': 'User profile fetched successfully',
+                    'data': [{
+                        'id': request.user.id,
+                        'username': request.user.username,
+                        'email': request.user.email,
+                        'first_name': request.user.first_name,
+                        'last_name': request.user.last_name,
+                        'phone_number': user_profile.phone,
+                        'image_url': user_profile.image.url if user_profile.image else None,
+                        'gender': user_profile.gender,
+                    }]
+                }
+            elif request.user.is_company:
+                user_profile = request.user.company
+                status_code = status.HTTP_200_OK
+                response = {
+                    'success': 'true',
+                    'status code': status_code,
+                    'message': 'Company profile fetched successfully',
+                    'data': [{
+                        'id': request.user.id,
+                        'username': request.user.username,
+                        'email': request.user.email,
+                        'first_name': request.user.first_name,
+                        'last_name': request.user.last_name,
+                        'phone_number': user_profile.phone,
+                        'logo_url': user_profile.logo.url if user_profile.logo else None,
+                        'location': user_profile.location,
+                        'company_name': user_profile.company_name,
+                    }]
+                }
+            elif request.user.is_superuser:
+                user_profile = request.user
+                status_code = status.HTTP_200_OK
+                response = {
+                    'success': 'true',
+                    'status code': status_code,
+                    'message': 'Admin profile fetched successfully',
+                    'data': [{
+                        'email': user_profile.email,
+                    }]
+                }
+
+        except Exception as e:
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status code': status.HTTP_400_BAD_REQUEST,
+                'message': 'User does not exist',
+                'error': str(e)
+            }
+        return Response(response, status=status_code)
 
 
 class UserRegistrationView(RegisterView):
@@ -35,6 +105,16 @@ class UserLoginAPIView(generics.GenericAPIView):
             return Response({'Login Successfully' + ' ' + 'token': token.key}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'}, status=401)
+
+
+class LogoutView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        request.user.auth_token.delete()
+        logout(request)
+        return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 
 class ApplicantUserList(generics.ListAPIView):
@@ -207,7 +287,7 @@ class ApplyJobView(generics.CreateAPIView):
                 application = Application.objects.get(job=job, user=user)
                 return Response({'error': 'The user has already applied to this job.'}, status=status.HTTP_400_BAD_REQUEST)
             except Application.DoesNotExist:
-                pass
+                application = None
 
             serializer.save(job=job, user=user,
                             apply_date=date_today, status=False)

@@ -1,12 +1,17 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
-from .views import UserLoginAPIView, UserRegistrationView, ApplicantUserList, ApplicantUserDetail, JobList, JobDetail, JobSearchAPIView, ApplyJobView, AppliedJobList, CompanySignupView, CompanyLoginAPIView, CompanyList, CompanySearchAPIView, CompanyDetail, JobCreation, ApplicationList, ApplicationDetail, ReviewCreateAPIView, ReviewListAPIView, CompanyReviewListAPIView, AddSalaryCreateAPI, SalaryListAPIView, CompanySalaryListAPIView, AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView
-
+from .views import UserLoginAPIView, UserRegistrationView, ApplicantUserList, ApplicantUserDetail, JobList, JobDetail, \
+    JobSearchAPIView, ApplyJobView, AppliedJobList, CompanySignupView, CompanyLoginAPIView, CompanyList, \
+    CompanySearchAPIView, CompanyDetail, JobCreation, ApplicationList, ApplicationDetail, ReviewCreateAPIView, \
+    ReviewListAPIView, CompanyReviewListAPIView, AddSalaryCreateAPI, SalaryListAPIView, CompanySalaryListAPIView, \
+    AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView, LogoutView, UserProfileView
 
 urlpatterns = [
 
     #User
+    path('profile/', UserProfileView.as_view()),
     path('accounts/login/', UserLoginAPIView.as_view(), name='applicant_user_login'),
+    path('logout/', LogoutView.as_view(), name='rest_logout'),
     path('Applicant/signup/', UserRegistrationView.as_view(), name='signup'),
     path('applicants/', ApplicantUserList.as_view(), name='applicant-list'),
     path('applicants/<int:pk>/', ApplicantUserDetail.as_view(), name='applicant-detail'),
