@@ -29,7 +29,7 @@ class ApplicantUser(models.Model):
 class Company(models.Model):
     company = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     phone = models.CharField(max_length=20)
-    logo = models.ImageField(upload_to="jobportal/static/company_img")
+    logo = models.ImageField(upload_to="jobportal/static/company_img", blank=True)
     location = models.CharField(max_length=255)
     company_name = models.CharField(max_length=100)
     # status = models.CharField(max_length=20, default='pending')

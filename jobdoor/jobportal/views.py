@@ -1,5 +1,6 @@
 from datetime import date
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_auth.registration.views import RegisterView
@@ -120,6 +121,14 @@ class JobCreation(generics.CreateAPIView):
         # Set the company field to the authenticated user
         serializer.validated_data['company'] = self.request.user.company
         serializer.save()
+        # # Get all ApplicantUsers and send notification
+        # applicant_users = User.objects.all()
+        # subject = 'New job posting available'
+        # message = 'A new job posting is now available. Check it out on our website!'
+        # from_email = 'admin@Jobdoor.com'
+        # recipient_list = [applicant_user.email for applicant_user in applicant_users]
+        # send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

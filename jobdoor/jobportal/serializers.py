@@ -30,7 +30,7 @@ class ApplicantUserSignupSerializer(RegisterSerializer):
     last_name = serializers.CharField(required=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     phone = serializers.CharField(required=True)
-    image = serializers.ImageField(required=True)
+    # image = serializers.ImageField(required=True)
     gender = serializers.CharField(required=True)
 
     def get_cleaned_data(self):
@@ -39,7 +39,7 @@ class ApplicantUserSignupSerializer(RegisterSerializer):
             'first_name': self.validated_data.get('first_name', ''),
             'last_name': self.validated_data.get('last_name', ''),
             'phone': self.validated_data.get('phone', ''),
-            'image': self.validated_data.get('image', ''),
+            # 'image': self.validated_data.get('image', ''),
             'gender': self.validated_data.get('gender', ''),
 
         }
@@ -52,7 +52,7 @@ class ApplicantUserSignupSerializer(RegisterSerializer):
         user.first_name = self.cleaned_data.get('first_name')
         user.last_name = self.cleaned_data.get('last_name')
         user.save()
-        abs_user = ApplicantUser(user=user, phone=self.cleaned_data.get('phone'), image=self.cleaned_data.get('image'),
+        abs_user = ApplicantUser(user=user, phone=self.cleaned_data.get('phone'),
                                  gender=self.cleaned_data.get('gender'), )
         abs_user.save()
         return user
@@ -73,7 +73,7 @@ class CompanyRegistrationSerializer(RegisterSerializer):
     last_name = serializers.CharField(required=True)
     company = serializers.PrimaryKeyRelatedField(read_only=True)
     phone = serializers.CharField(required=True)
-    logo = serializers.ImageField(required=True)
+    # logo = serializers.ImageField(required=True)
     location = serializers.CharField(required=True)
     company_name = serializers.CharField(required=True)
 
@@ -83,7 +83,7 @@ class CompanyRegistrationSerializer(RegisterSerializer):
             'first_name': self.validated_data.get('first_name', ''),
             'last_name': self.validated_data.get('last_name', ''),
             'phone': self.validated_data.get('phone', ''),
-            'logo': self.validated_data.get('logo', ''),
+            # 'logo': self.validated_data.get('logo', ''),
             'location': self.validated_data.get('location', ''),
             'company_name': self.validated_data.get('company_name', ''),
 
@@ -101,7 +101,7 @@ class CompanyRegistrationSerializer(RegisterSerializer):
         company = Company(
             company=user,
             phone=self.cleaned_data.get('phone'),
-            logo=self.cleaned_data.get('logo'),
+            # logo=self.cleaned_data.get('logo'),
             location=self.cleaned_data.get('location'),
             company_name=self.cleaned_data.get('company_name'),
         )
@@ -115,18 +115,38 @@ class CompanyLoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 
+# class CompanyUserSerializer(serializers.ModelSerializer):
+#     phone = serializers.CharField(source='company.phone')
+#     logo = serializers.ImageField(source='company.logo')
+#     location = serializers.CharField(source='company.location')
+#     company_name = serializers.CharField(source='company.company_name')
+#     # status = serializers.CharField(source='company.status')
+#     # type = serializers.CharField(source='company.type')
+#
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name']
 class CompanyUserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source='company.phone')
     logo = serializers.ImageField(source='company.logo')
     location = serializers.CharField(source='company.location')
     company_name = serializers.CharField(source='company.company_name')
-    # status = serializers.CharField(source='company.status')
-    # type = serializers.CharField(source='company.type')
 
     class Meta:
         model = User
-        fields =['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'logo', 'location', 'company_name']
 
+    def update(self, instance, validated_data):
+        company_data = validated_data.pop('company', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if company_data is not None:
+            company = instance.company
+            for attr, value in company_data.items():
+                setattr(company, attr, value)
+            company.save()
+        instance.save()
+        return instance
 
 class CompanySerializer(serializers.ModelSerializer):
     company_id = serializers.CharField(source='company.id')
@@ -139,6 +159,18 @@ class CompanySerializer(serializers.ModelSerializer):
         model = Company
         fields = ['company_id', 'company_username', 'company_name', 'logo']
 
+    # def update(self, instance, validated_data):
+    #     company_data = validated_data.pop('company', None)
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+    #     if company_data is not None:
+    #         company = instance.company
+    #         for attr, value in company_data.items():
+    #             setattr(company, attr, value)
+    #         company.save()
+    #     instance.save()
+    #     return instance
+    #
 
 class JobSerializer(serializers.ModelSerializer):
     # company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all())
