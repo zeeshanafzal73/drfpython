@@ -43,18 +43,18 @@ class Company(models.Model):
 class Job(models.Model):
 
     ex_Types = (
-        (1, '1 year'),
-        (2, '2 year'),
-        (3, '3 year'),
-        (4, '4 year'),
-        (5, '5 year'),
-        (6, '6 year'),
-        (7, '7 year'),
-        (8, '8 year'),
-        (9, '9 year'),
-        (10, '10 year'),
-        (11, '11 year'),
-        (12, '12 year'),
+        ('1 year', '1 year'),
+        ('2 year', '2 year'),
+        ('3 year', '3 year'),
+        ('4 year', '4 year'),
+        ('5 year', '5 year'),
+        ('6 year', '6 year'),
+        ('7 year', '7 year'),
+        ('8 year', '8 year'),
+        ('9 year', '9 year'),
+        ('10 year', '10 year'),
+        ('11 year', '11 year'),
+        ('12 year', '12 year'),
     )
 
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
@@ -76,7 +76,7 @@ class Job(models.Model):
 
 
 class Application(models.Model):
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     resume = models.FileField(upload_to="jobportal/static/resume")
     apply_date = models.DateField(default=now)
@@ -209,3 +209,21 @@ class AddInterview(models.Model):
     def __str__(self):
 
         return f"{self.user.username}'s interview for {self.company.company_name}"
+
+
+class Keyword(models.Model):
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='keywords')
+
+    def __str__(self):
+        return self.name
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.job.title

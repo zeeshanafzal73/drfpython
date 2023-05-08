@@ -1,4 +1,4 @@
-from .models import ApplicantUser, Company, Job, Application
+from .models import Job, Application, Keyword, Notification
 from rest_framework import serializers
 from rest_auth.registration.serializers import RegisterSerializer
 from .models import ApplicantUser, Company, Review, Salary, AddInterview
@@ -61,12 +61,30 @@ class ApplicantUserSignupSerializer(RegisterSerializer):
 class ApplicantUserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source='applicantuser.phone')
     gender = serializers.CharField(source='applicantuser.gender')
-    type = serializers.CharField(source='applicantuser.type')
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name',
-                  'last_name', 'phone', 'gender', 'type']
+                  'last_name', 'phone', 'gender']
+
+    def update(self, instance, validated_data):
+        # Update User fields
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+
+        # Update related ApplicantUser fields if available
+        if hasattr(instance, 'applicantuser'):
+            applicantuser = instance.applicantuser
+            applicantuser.phone = validated_data.get('applicantuser', {}).get('phone', applicantuser.phone)
+            applicantuser.gender = validated_data.get('applicantuser', {}).get('gender', applicantuser.gender)
+            applicantuser.save()
+
+        # Save User instance with updated fields
+        instance.save()
+
+        return instance
 
 
 class CompanyRegistrationSerializer(RegisterSerializer):
@@ -143,9 +161,6 @@ class CompanyUserSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
     company_id = serializers.CharField(source='company.id')
     company_username = serializers.CharField(source='company.username')
-    # user_first_name = serializers.CharField(source='company.first_name')
-    # user_last_name = serializers.CharField(source='company.last_name')
-    # user_email = serializers.CharField(source='company.email')
 
     class Meta:
         model = Company
@@ -164,9 +179,12 @@ class JobSerializer(serializers.ModelSerializer):
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
+    job_title = serializers.CharField(source='job.title')
+    user_name = serializers.CharField(source='user.username')
+
     class Meta:
         model = Application
-        fields = ['job', 'user', 'resume']
+        fields = ['id', 'job_title', 'user_name', 'apply_date', 'resume']
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -206,3 +224,22 @@ class InterviewSerializer(serializers.ModelSerializer):
         model = AddInterview
         fields = ['id', 'Rate', 'job_title', 'process',
                   'questions', 'answers', 'outcome_offer', 'user']
+
+
+class KeywordSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Keyword
+        fields = '__all__'
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    user = serializers.CharField(source='user.username')
+    job_id = serializers.CharField(source='job.id')
+    created_start = serializers.CharField(source='job.start_date')
+    created_end = serializers.CharField(source='job.end_date')
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'job_id', 'message', 'created_start', 'created_end']

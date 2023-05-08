@@ -1,7 +1,5 @@
-from datetime import date
 from allauth.account.views import logout
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_auth.registration.views import RegisterView
@@ -9,14 +7,17 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.generics import get_object_or_404, RetrieveAPIView
 from rest_framework.views import APIView
-from .models import Company, Job, Application, Review, Salary, AddInterview
-from .serializers import ApplicantUserSerializer, UserLoginSerializer, CompanySerializer, CompanyRegistrationSerializer, CompanyUserSerializer, JobSerializer, ApplicationSerializer, ApplicantUserSignupSerializer, CompanyLoginSerializer, ReviewSerializer, SalarySerializer, InterviewSerializer
+from .models import Company, Job, Application, Review, Salary, AddInterview, Keyword, Notification
+from .serializers import ApplicantUserSerializer, UserLoginSerializer, CompanySerializer, CompanyRegistrationSerializer, \
+    CompanyUserSerializer, JobSerializer, ApplicationSerializer, ApplicantUserSignupSerializer, CompanyLoginSerializer, \
+    ReviewSerializer, SalarySerializer, InterviewSerializer, KeywordSerializer, NotificationSerializer
 from rest_framework import generics, status, permissions, filters
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
+from datetime import date, datetime, timedelta
 
 
 User = get_user_model()
@@ -179,6 +180,14 @@ class CompanyDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class AllJobs(generics.ListAPIView):
+    serializer_class = JobSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Job.objects.all()
+
+
 class JobList(generics.ListAPIView):
     serializer_class = JobSerializer
     permission_classes = [IsAuthenticated]
@@ -201,13 +210,28 @@ class JobCreation(generics.CreateAPIView):
         # Set the company field to the authenticated user
         serializer.validated_data['company'] = self.request.user.company
         serializer.save()
-        # # Get all ApplicantUsers and send notification
-        # applicant_users = User.objects.all()
-        # subject = 'New job posting available'
-        # message = 'A new job posting is now available. Check it out on our website!'
-        # from_email = 'admin@Jobdoor.com'
-        # recipient_list = [applicant_user.email for applicant_user in applicant_users]
-        # send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+
+        # Check if there are any matching keywords
+        keywords = Keyword.objects.filter(name__icontains=serializer.validated_data['description'])
+        if keywords:
+            # Get the jobs posted in the last 30 minutes
+            time_threshold = datetime.now() - timedelta(minutes=30)
+            jobs = Job.objects.filter(creation_date__gte=time_threshold)
+
+            # Find jobs that match the keywords
+            matching_jobs = []
+            for job in jobs:
+                for keyword in keywords:
+                    if keyword.name in job.description:
+                        matching_jobs.append(job)
+
+            # Send notification to user
+            for matching_job in matching_jobs:
+                Notification.objects.create(
+                    user=self.request.user,
+                    job=matching_job,
+                    message=f"A new job has been posted matching your keyword: {matching_job.title}"
+                )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -251,18 +275,55 @@ class ApplicationList(generics.ListAPIView):
 
 
 class ApplicationDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated and not user.is_company:
-            raise PermissionDenied(
-                detail='Only company users can see their applications details')
+        if not user.is_authenticated or not user.is_company:
+            raise PermissionDenied(detail='Only company users can see their applications details')
+
+        # Get the requested application id from the URL parameter
+        application_id = self.kwargs.get('pk')
+
+        # Filter the queryset by the requested application id
+        queryset = Application.objects.filter(id=application_id)
+        print(queryset)
+        return queryset
 
 
 @method_decorator(login_required, name='dispatch')
+# class ApplyJobView(generics.CreateAPIView):
+#     serializer_class = ApplicationSerializer
+#     permission_classes = (IsAuthenticated,)
+#
+#     def post(self, request, *args, **kwargs):
+#         job_id = kwargs['job_id']
+#         print(job_id)
+#         try:
+#             job = Job.objects.get(id=job_id)
+#         except Job.DoesNotExist:
+#             return Response({'error': 'The specified job does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+#
+#         date_today = date.today()
+#         if job.end_date < date_today:
+#             return Response({'error': 'The specified job has already closed.'}, status=status.HTTP_400_BAD_REQUEST)
+#         elif job.start_date > date_today:
+#             return Response({'error': 'The specified job has not yet opened.'}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         serializer = ApplicationSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = request.user
+#             try:
+#                 application = Application.objects.get(job=job, user=user)
+#                 return Response({'error': 'The user has already applied to this job.'}, status=status.HTTP_400_BAD_REQUEST)
+#             except Application.DoesNotExist:
+#                 application = None
+#
+#             serializer.save(job=job, user=user,
+#                             apply_date=date_today, status=False)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class ApplyJobView(generics.CreateAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = (IsAuthenticated,)
@@ -442,3 +503,49 @@ class CompanyInterviewListAPIView(generics.ListAPIView):
         if not interviews.exists():
             return Response({'detail': 'No interviews available.'}, status=status.HTTP_404_NOT_FOUND)
         return interviews
+
+
+def get_jobs_by_keyword(keyword):
+    jobs = Job.objects.filter(title__icontains=keyword)
+    job_ids = [job.id for job in jobs]
+    print(job_ids)
+
+    return job_ids
+
+
+class KeywordCreation(generics.CreateAPIView):
+    serializer_class = KeywordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Set the user to the current authenticated user
+        serializer.validated_data['user'] = self.request.user
+        serializer.save()
+
+        # Get any matching jobs
+        jobs = get_jobs_by_keyword(serializer.validated_data['name'])
+
+        if jobs:
+            # Create a notification for the first matching job
+            Notification.objects.create(
+                user=self.request.user,
+                job_id=jobs[0],
+                message=f"A new job has been posted matching your keyword: {serializer.validated_data['name']}"
+            )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class NotificationList(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Notification.objects.filter(user=self.request.user)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        return response
+
+

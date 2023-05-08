@@ -4,7 +4,7 @@ from .views import UserLoginAPIView, UserRegistrationView, ApplicantUserList, Ap
     JobSearchAPIView, ApplyJobView, AppliedJobList, CompanySignupView, CompanyLoginAPIView, CompanyList, \
     CompanySearchAPIView, CompanyDetail, JobCreation, ApplicationList, ApplicationDetail, ReviewCreateAPIView, \
     ReviewListAPIView, CompanyReviewListAPIView, AddSalaryCreateAPI, SalaryListAPIView, CompanySalaryListAPIView, \
-    AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView, LogoutView, UserProfileView
+    AddInterviewCreateAPI, InterviewListAPIView, CompanyInterviewListAPIView, LogoutView, UserProfileView, AllJobs, KeywordCreation, NotificationList
 
 urlpatterns = [
 
@@ -12,10 +12,10 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view()),
     path('accounts/login/', UserLoginAPIView.as_view(), name='applicant_user_login'),
     path('logout/', LogoutView.as_view(), name='rest_logout'),
-    path('Applicant/signup/', UserRegistrationView.as_view(), name='signup'),
+    path('applicant/signup/', UserRegistrationView.as_view(), name='signup'),
     path('applicants/', ApplicantUserList.as_view(), name='applicant-list'),
     path('applicants/<int:pk>/', ApplicantUserDetail.as_view(), name='applicant-detail'),
-    path('jobs/', JobList.as_view(), name='job-list'),
+    path('all/jobs/', AllJobs.as_view(), name='All-jobs'),
     path('jobs/<int:pk>/', JobDetail.as_view(), name='job-detail'),
     path('jobs/<int:job_id>/apply/', ApplyJobView.as_view(), name='apply_job'),
     path('search/jobs/', JobSearchAPIView.as_view(), name='search-jobs'),
@@ -23,11 +23,12 @@ urlpatterns = [
 
 
     #Company
-    path('company/signup/', CompanySignupView.as_view(),name='signup'),
-    path('company/login/', CompanyLoginAPIView.as_view(),name='login'),
+    path('company/signup/', CompanySignupView.as_view(), name='signup'),
+    path('company/login/', CompanyLoginAPIView.as_view(), name='login'),
     path('companies/', CompanyList.as_view(), name='company-list'),
     path('companies/search/', CompanySearchAPIView.as_view(), name='company-search-filter'),
     path('companies/<int:pk>/', CompanyDetail.as_view(), name='company-detail'),
+    path('jobs/', JobList.as_view(), name='job-list'),
     path('add_jobs/', JobCreation.as_view(), name='job_creation'),
 
     #Application
@@ -50,6 +51,14 @@ urlpatterns = [
     path('Interview/create/<int:company_id>/', AddInterviewCreateAPI.as_view(), name='Add-interview-info'),
     path('Interview/<int:company_id>/', InterviewListAPIView.as_view(), name='interview-info'),
     path('Interview/', CompanyInterviewListAPIView.as_view(), name='View-interview-info'),
+
+    #Notifications
+    path('keywords/create/', KeywordCreation.as_view(), name='keyword_create'),
+    path('notifications/', NotificationList.as_view(), name='notification_list'),
+
+
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
+
